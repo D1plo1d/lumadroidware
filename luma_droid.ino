@@ -1,7 +1,7 @@
 // Configurable Settings
 /*****************************************************************************/
 
-int verbose = 0;
+int verbose = 1;
 unsigned long blinkSpeed = 200;
 
 // Drink Actions consist of an array consisting of:
@@ -87,15 +87,16 @@ void loopServos()
 #include "LPD8806.h"
 #include "SPI.h"
 
+unsigned long lastLEDTime = 0;
+int ledAnimationType = 1;
+int ledFrame = 0;
+
 // Number of RGB LEDs in strand:
 int nLEDs = 74;
-int currentLED = 0;
-int previousLED = 0;
-unsigned long lastLEDTime = 0;
 
 // Chose 2 pins for output; can be any valid output pins:
-int dataPin  = SDA;
-int clockPin = SCL;
+int dataPin  = A1;
+int clockPin = A0;
 
 // First parameter is the number of LEDs in the strand.  The LED strips
 // are 32 LEDs per meter but you can extend or cut the strip.  Next two
@@ -119,140 +120,112 @@ void setupLightStrip() {
 }
 
 void loopLightStrip() {
-  if (millis() - lastLEDTime > 30)
-  {
-    lastLEDTime = millis();
-    previousLED = currentLED;
-    currentLED = (currentLED + 1) % strip.numPixels();
+  uint32_t c = strip.Color(127, 0, 0);
+
+  // Fast Animation Prep
+  if (ledAnimationType < 10) ledFrame++;
+
+  // Fast Animations
+  if (ledAnimationType == 0) iterateRainbowCycle(ledFrame);
+  if (ledAnimationType == 1) iterateRainbow(ledFrame);
+
+  // Slow Animation Prep
+  if (millis() - lastLEDTime < 50 || ledAnimationType < 10) return;
+  lastLEDTime = millis();
+  ledFrame++;
+
+  // Slow Animations
+  if (ledAnimationType == 10) iterateTheaterChase(c, ledFrame/50);
+  if (ledAnimationType == 11) iterateTheaterChaseRainbow(ledFrame/50);
+  if (ledAnimationType == 12) iterateColorWipe(c, ledFrame/50);
+  if (ledAnimationType == 13) iterateColorChase(c, ledFrame/50);
+
+}
+
+void clearLEDs() {
+  int i;
+  for (i=0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, 0);
   }
-  strip.setPixelColor(previousLED, strip.Color(0, 0, 0));
-  strip.setPixelColor(currentLED,  strip.Color(127, 0, 0));
+}
+
+void iterateRainbow(int frame) {
+  int i;
+  int j = frame % 384;
+
+  for (i=0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, Wheel( (i + j) % 384));
+  }
+  strip.show();   // write all the pixels out
+}
+
+// Slightly different, this one makes the rainbow wheel equally distributed
+// along the chain
+void iterateRainbowCycle(int frame) {
+  uint16_t i;
+  int j = frame % (384*5);
+
+  for (i=0; i < strip.numPixels(); i++) {
+    // tricky math! we use each pixel as a fraction of the full 384-color wheel
+    // (thats the i / strip.numPixels() part)
+    // Then add in j which makes the colors go around per pixel
+    // the % 384 is to make the wheel cycle around
+    strip.setPixelColor(i, Wheel( ((i * 384 / strip.numPixels()) + j) % 384) );
+  }
+  strip.show();   // write all the pixels out
+}
+
+// Fill the dots progressively along the strip.
+void iterateColorWipe(uint32_t c, int frame) {
+  int i = frame % strip.numPixels();
+  if (i == 0) clearLEDs();
+
+  strip.setPixelColor(i, c);
   strip.show();
 }
 
-// void loopLightStrip() {
-//   // Send a simple pixel chase in...
-//   colorChase(strip.Color(127, 127, 127), 50); // White
-//   colorChase(strip.Color(127,   0,   0), 50); // Red
-//   colorChase(strip.Color(127, 127,   0), 50); // Yellow
-//   colorChase(strip.Color(  0, 127,   0), 50); // Green
-//   colorChase(strip.Color(  0, 127, 127), 50); // Cyan
-//   colorChase(strip.Color(  0,   0, 127), 50); // Blue
-//   colorChase(strip.Color(127,   0, 127), 50); // Violet
+// Chase one dot down the full strip.
+void iterateColorChase(uint32_t c, int frame) {
+  int i = frame % strip.numPixels();
+  int j;
 
-//   // Send a theater pixel chase in...
-//   theaterChase(strip.Color(127, 127, 127), 50); // White
-//   theaterChase(strip.Color(127,   0,   0), 50); // Red
-//   theaterChase(strip.Color(127, 127,   0), 50); // Yellow
-//   theaterChase(strip.Color(  0, 127,   0), 50); // Green
-//   theaterChase(strip.Color(  0, 127, 127), 50); // Cyan
-//   theaterChase(strip.Color(  0,   0, 127), 50); // Blue
-//   theaterChase(strip.Color(127,   0, 127), 50); // Violet
+  // Start by turning all pixels off:
+  // for(i=0; i<strip.numPixels(); i++) strip.setPixelColor(i, 0);
 
-//   // Fill the entire strip with...
-//   colorWipe(strip.Color(127,   0,   0), 50);  // Red
-//   colorWipe(strip.Color(  0, 127,   0), 50);  // Green
-//   colorWipe(strip.Color(  0,   0, 127), 50);  // Blue
+  // Then display one pixel at a time:
+  for (j = 0; j < strip.numPixels(); ++j) {
+    strip.setPixelColor(j, c); // Erase pixel, but don't refresh!
+  }
 
-//   rainbow(10);
-//   rainbowCycle(0);  // make it go through the cycle fairly fast
-//   theaterChaseRainbow(50);
-// }
+  strip.setPixelColor(i, 0); // Set new pixel 'on'
+  strip.show();              // Refresh LED states
+}
 
-// void rainbow(uint8_t wait) {
-//   int i, j;
-
-//   for (j=0; j < 384; j++) {     // 3 cycles of all 384 colors in the wheel
-//     for (i=0; i < strip.numPixels(); i++) {
-//       strip.setPixelColor(i, Wheel( (i + j) % 384));
-//     }
-//     strip.show();   // write all the pixels out
-//     delay(wait);
-//   }
-// }
-
-// // Slightly different, this one makes the rainbow wheel equally distributed
-// // along the chain
-// void rainbowCycle(uint8_t wait) {
-//   uint16_t i, j;
-
-//   for (j=0; j < 384 * 5; j++) {     // 5 cycles of all 384 colors in the wheel
-//     for (i=0; i < strip.numPixels(); i++) {
-//       // tricky math! we use each pixel as a fraction of the full 384-color wheel
-//       // (thats the i / strip.numPixels() part)
-//       // Then add in j which makes the colors go around per pixel
-//       // the % 384 is to make the wheel cycle around
-//       strip.setPixelColor(i, Wheel( ((i * 384 / strip.numPixels()) + j) % 384) );
-//     }
-//     strip.show();   // write all the pixels out
-//     delay(wait);
-//   }
-// }
-
-// // Fill the dots progressively along the strip.
-// void colorWipe(uint32_t c, uint8_t wait) {
-//   int i;
-
-//   for (i=0; i < strip.numPixels(); i++) {
-//       strip.setPixelColor(i, c);
-//       strip.show();
-//       delay(wait);
-//   }
-// }
-
-// // Chase one dot down the full strip.
-// void colorChase(uint32_t c, uint8_t wait) {
-//   int i;
-
-//   // Start by turning all pixels off:
-//   for(i=0; i<strip.numPixels(); i++) strip.setPixelColor(i, 0);
-
-//   // Then display one pixel at a time:
-//   for(i=0; i<strip.numPixels(); i++) {
-//     strip.setPixelColor(i, c); // Set new pixel 'on'
-//     strip.show();              // Refresh LED states
-//     strip.setPixelColor(i, 0); // Erase pixel, but don't refresh!
-//     delay(wait);
-//   }
-
-//   strip.show(); // Refresh to turn off last pixel
-// }
-
-// //Theatre-style crawling lights.
-// void theaterChase(uint32_t c, uint8_t wait) {
-//   for (int j=0; j<10; j++) {  //do 10 cycles of chasing
-//     for (int q=0; q < 3; q++) {
-//       for (int i=0; i < strip.numPixels(); i=i+3) {
-//         strip.setPixelColor(i+q, c);    //turn every third pixel on
-//       }
-//       strip.show();
-
-//       delay(wait);
-
-//       for (int i=0; i < strip.numPixels(); i=i+3) {
-//         strip.setPixelColor(i+q, 0);        //turn every third pixel off
-//       }
-//     }
-//   }
-// }
+//Theatre-style crawling lights.
+void iterateTheaterChase(uint32_t c, int frame) {
+  int q = frame % 3;
+  for (int i=0; i < strip.numPixels(); i=i+3) {
+    strip.setPixelColor(i+q, c);    //turn every third pixel on
+  }
+  strip.show();
+  for (int i=0; i < strip.numPixels(); i=i+3) {
+    strip.setPixelColor(i+q, 0);    //turn every third pixel off
+  }
+}
 
 // //Theatre-style crawling lights with rainbow effect
-// void theaterChaseRainbow(uint8_t wait) {
-//   for (int j=0; j < 384; j++) {     // cycle all 384 colors in the wheel
-//     for (int q=0; q < 3; q++) {
-//         for (int i=0; i < strip.numPixels(); i=i+3) {
-//           strip.setPixelColor(i+q, Wheel( (i+j) % 384));    //turn every third pixel on
-//         }
-//         strip.show();
+void iterateTheaterChaseRainbow(int frame) {
+  int q = frame % 3;
+  int j = frame % 384;
+  for (int i=0; i < strip.numPixels(); i=i+3) {
+    strip.setPixelColor(i+q, Wheel( (i+j) % 384));    //turn every third pixel on
+  }
+  strip.show();
 
-//         delay(wait);
-
-//         for (int i=0; i < strip.numPixels(); i=i+3) {
-//           strip.setPixelColor(i+q, 0);        //turn every third pixel off
-//         }
-//     }
-//   }
-// }
+  for (int i=0; i < strip.numPixels(); i=i+3) {
+    strip.setPixelColor(i+q, 0);        //turn every third pixel off
+  }
+}
 
 
 /* Helper functions */
@@ -491,7 +464,7 @@ void setup() {
   Serial.println("Adafruit Motorshield v2 - DC Motor test!");
 
   setupMotorShield();
-  // setupLightStrip();
+  setupLightStrip();
   setupButtons();
   setupServos();
 }
@@ -508,7 +481,7 @@ void loop() {
   }
 
   loopButtons();
-  // loopLightStrip();
+  loopLightStrip();
   loopDrinkLogic();
   loopServos();
 
