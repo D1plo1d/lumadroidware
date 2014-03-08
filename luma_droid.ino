@@ -3,34 +3,78 @@
 
 int verbose = 1;
 unsigned long blinkSpeed = 200;
+unsigned long oneOunceTime = 24000;
+unsigned long oneOunceValveTime = 10000;
+
+const unsigned int Vodka = 0;
+const unsigned int PeachSchnaps = 1;
+const unsigned int BlueCuracao = 2;
+const unsigned int LimeCordial = 3;
+const unsigned int OJ = 100;
+const unsigned int Cranberry = 101;
+
 
 // Drink Actions consist of an array consisting of:
 // - an id for the motor / servo (motor ids: 0-4, servo ids: 100, 101)
 // - a start time in milliseconds
 // - an end time in milliseconds
 
-unsigned long drinkActions[2][10][3] = {
-  {
-    {  0,     0,  500},
-    {  1,   500, 1000},
-    {  2,  1000, 1500},
-    {  3,  1500, 2000},
-    {100,     0, 2000},
-    {101,  1000, 3000}
-  },
-  {
-    {  0,     0,  1000},
-    {  3,     0,  3000}
+unsigned long drinkActions[6][10][3] = {
+/*  {  // sequence the motors, make sure they are all sucking, etc.
+    { Vodka, 0, oneOunceTime},
+    { PeachSchnaps, oneOunceTime, 2*oneOunceTime},
+    { BlueCuracao, 2*oneOunceTime, 3*oneOunceTime},
+    { LimeCordial, 3*oneOunceTime, 4*oneOunceTime},
+  } */
+  {  // Sex On The Beach  (Red Button)
+    { Vodka,        0,   oneOunceTime         },
+    { PeachSchnaps, 0,   oneOunceTime         },
+    { OJ,           0, 2*oneOunceValveTime    },
+    { Cranberry,    0, 2*oneOunceValveTime    }
+  }
+  ,
+  {  // Sour Peach (Green Button)
+    { Vodka,        0,   oneOunceTime      },
+    { PeachSchnaps, 0,   oneOunceTime      },
+    { LimeCordial,  0,   oneOunceTime      },
+    { Cranberry,    0, 3*oneOunceValveTime }
+  }
+  ,
+  { // Lime Fuzzy Navel  ( White Button )
+    { Vodka,        0, 0.5*oneOunceTime      },
+    { PeachSchnaps, 0, 1.5*oneOunceTime      },
+    { LimeCordial,  0, 0.5*oneOunceTime      },
+    { OJ,           0, 1.5*oneOunceValveTime }
+  }
+  ,
+  { // Luma Droid    (Red Button)
+    { Vodka,        0,   oneOunceTime  },
+    { PeachSchnaps, 0,   oneOunceTime  }, 
+    { BlueCuracao,  0,   oneOunceTime  },
+    { LimeCordial,  0, 2*oneOunceTime  }
+  }
+  ,
+  { // Robot Cosmo   (Blue Button)
+    { Vodka,        0, 1.5*oneOunceTime      },
+    { BlueCuracao,  0, 0.5*oneOunceTime      },
+    { LimeCordial,  0, 0.5*oneOunceTime      },
+    { Cranberry,    0, 1.5*oneOunceValveTime }
+  }
+  ,
+  { // Green Widow   (Green Button) (actually white button?!?)
+    { BlueCuracao,  0, 2*oneOunceTime       },
+    { LimeCordial,  0,   oneOunceTime       },
+    { OJ,           0, 3*oneOunceValveTime  }
   }
 };
 
 int drinkActionLengths[] = {
-  6,
-  2,
-  0,
-  0,
-  0,
-  0
+  4,
+  4,
+  4,
+  4,
+  4,
+  3
 };
 
 
@@ -39,8 +83,8 @@ int drinkActionLengths[] = {
 
 unsigned long lastInfo = 0;
 int showInfo = 1;
-// int currentDrink = -1;
-int currentDrink = 0;
+int currentDrink = -1;
+//int currentDrink = 0;
 unsigned long drinkStart = 0;
 int actionNumber;
 
@@ -50,17 +94,22 @@ int actionNumber;
 
 #include <Servo.h>
 
-int servoPins [] = {9, 10};
-int servoStates [] = {0, 0};
-// indecies: position 0: off, position 1: on
-int servoStatePositions [] = {0, 30}; // (0-180)
+int servoPins [] = {
+  9, 10};
+int servoStates [] = {
+  0, 0};
+// indecies: position 0: off, position 1: on (servo 0)
+// position 2: off, position 3: on (servo 1) 
+int servoStatePositions [] = {
+  20, 90, 140, 70}; // (0-180)
 int nOfServos = 2;
 
 // create servo object to control a servo
 // a maximum of eight servo objects can be created
 Servo servoA;
 Servo servoB;
-Servo servos [] = { servoA, servoB };
+Servo servos [] = { 
+  servoA, servoB };
 
 void setupServos()
 {
@@ -76,7 +125,7 @@ void loopServos()
   int i;
   for ( i=0; i<nOfServos; ++i )
   {
-    servos[i].write(servoStatePositions[servoStates[i]]);
+    servos[i].write(servoStatePositions[servoStates[i]+i*2]);
   }
 }
 
@@ -238,21 +287,21 @@ uint32_t Wheel(uint16_t WheelPos)
   byte r, g, b;
   switch(WheelPos / 128)
   {
-    case 0:
-      r = 127 - WheelPos % 128;   //Red down
-      g = WheelPos % 128;      // Green up
-      b = 0;                  //blue off
-      break;
-    case 1:
-      g = 127 - WheelPos % 128;  //green down
-      b = WheelPos % 128;      //blue up
-      r = 0;                  //red off
-      break;
-    case 2:
-      b = 127 - WheelPos % 128;  //blue down
-      r = WheelPos % 128;      //red up
-      g = 0;                  //green off
-      break;
+  case 0:
+    r = 127 - WheelPos % 128;   //Red down
+    g = WheelPos % 128;      // Green up
+    b = 0;                  //blue off
+    break;
+  case 1:
+    g = 127 - WheelPos % 128;  //green down
+    b = WheelPos % 128;      //blue up
+    r = 0;                  //red off
+    break;
+  case 2:
+    b = 127 - WheelPos % 128;  //blue down
+    r = WheelPos % 128;      //red up
+    g = 0;                  //green off
+    break;
   }
   return(strip.Color(r,g,b));
 }
@@ -271,7 +320,8 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 // Adafruit_MotorShield AFMS = Adafruit_MotorShield(0x61);
 
 // Select which 'port' M1, M2, M3 or M4. In this case, M1
-Adafruit_DCMotor *motors [] = { AFMS.getMotor(1), AFMS.getMotor(2), AFMS.getMotor(3), AFMS.getMotor(4) };
+Adafruit_DCMotor *motors [] = { 
+  AFMS.getMotor(1), AFMS.getMotor(2), AFMS.getMotor(3), AFMS.getMotor(4) };
 int nOfMotors = 4;
 
 void setupMotorShield() {
@@ -290,9 +340,16 @@ void setupMotorShield() {
 // Buttons
 /*****************************************************************************/
 
-int buttonInputs[] = { 2, 4, 6, A2, 8, 12 };
-int buttonLights[] = { 3, 5, 7, 11, A3, 13 };
-int buttonStates[] = { 0, 0, 0, 0,  0,  0 };
+//int buttonInputs[] = { 
+//  2, 4, 6, A2, 8, 12 };
+//int buttonLights[] = { 
+//  3, 5, 7, 11, A3, 13 };
+int buttonInputs[] = { 
+  2, 4, 6, 8, A2, 12 };
+int buttonLights[] = { 
+  3, 5, 7, A3, 11, 13 };
+int buttonStates[] = { 
+  0, 0, 0, 0,  0,  0 };
 int nOfButtons = 6;
 
 void setupButtons() {
@@ -387,7 +444,8 @@ void loopDrinkLogic() {
   unsigned long* action;
   unsigned long start, end;
   unsigned long drinkFinished = true;
-  int motorEnables[4] = {0, 0, 0, 0};
+  int motorEnables[4] = {
+    0, 0, 0, 0  };
   for ( i=0; i<nOfServos; ++i)
   {
     servoStates[i] = 0;
@@ -464,9 +522,9 @@ void setup() {
   Serial.println("Adafruit Motorshield v2 - DC Motor test!");
 
   setupMotorShield();
+  setupServos();
   setupLightStrip();
   setupButtons();
-  setupServos();
 }
 
 
