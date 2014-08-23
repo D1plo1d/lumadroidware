@@ -3,16 +3,15 @@
 
 int verbose = 1;
 unsigned long blinkSpeed = 200;
-unsigned long oneOunceTime = 24000;
-unsigned long oneOunceValveTime = 10000;
+unsigned long oneOunceTime = 35000;
+unsigned long oneOunceValveTime = 2800;
 
-const unsigned int Vodka = 0;
-const unsigned int PeachSchnaps = 1;
-const unsigned int BlueCuracao = 2;
-const unsigned int LimeCordial = 3;
-const unsigned int OJ = 100;
-const unsigned int Cranberry = 101;
-
+const unsigned int Vodka1 = 0;
+const unsigned int Vodka2 = 1;
+const unsigned int Vodka3 = 2;
+const unsigned int Vodka4 = 3;
+const unsigned int IcedTea = 101;
+const unsigned int Lemonade = 100;
 
 // Drink Actions consist of an array consisting of:
 // - an id for the motor / servo (motor ids: 0-4, servo ids: 100, 101)
@@ -20,61 +19,64 @@ const unsigned int Cranberry = 101;
 // - an end time in milliseconds
 
 unsigned long drinkActions[6][10][3] = {
-/*  {  // sequence the motors, make sure they are all sucking, etc.
-    { Vodka, 0, oneOunceTime},
-    { PeachSchnaps, oneOunceTime, 2*oneOunceTime},
-    { BlueCuracao, 2*oneOunceTime, 3*oneOunceTime},
-    { LimeCordial, 3*oneOunceTime, 4*oneOunceTime},
-  } */
-  {  // Sex On The Beach  (Red Button)
-    { Vodka,        0,   oneOunceTime         },
-    { PeachSchnaps, 0,   oneOunceTime         },
-    { OJ,           0, 2*oneOunceValveTime    },
-    { Cranberry,    0, 2*oneOunceValveTime    }
+  {  // Raspberry Pi (Red Button)
+    { Vodka1,    0,   oneOunceTime/4     },
+    { Vodka2,    0,   oneOunceTime/4     },
+    { Vodka3,    0,   oneOunceTime/4     },
+    { Vodka4,    0,   oneOunceTime/4     },
+    { IcedTea,   0, 3*oneOunceValveTime  },
   }
   ,
-  {  // Sour Peach (Green Button)
-    { Vodka,        0,   oneOunceTime      },
-    { PeachSchnaps, 0,   oneOunceTime      },
-    { LimeCordial,  0,   oneOunceTime      },
-    { Cranberry,    0, 3*oneOunceValveTime }
+  {  // Hacked Lemonade (Blue Button)
+    { Vodka1,    0,   oneOunceTime/4     },
+    { Vodka2,    0,   oneOunceTime/4     },
+    { Vodka3,    0,   oneOunceTime/4     },
+    { Vodka4,    0,   oneOunceTime/4     },
+    { Lemonade,  0, 3*oneOunceValveTime  },
   }
   ,
-  { // Lime Fuzzy Navel  ( White Button )
-    { Vodka,        0, 0.5*oneOunceTime      },
-    { PeachSchnaps, 0, 1.5*oneOunceTime      },
-    { LimeCordial,  0, 0.5*oneOunceTime      },
-    { OJ,           0, 1.5*oneOunceValveTime }
+  {  // 3D Iced Tea  (White Button)
+    { Vodka1,    0,   oneOunceTime/4     },
+    { Vodka2,    0,   oneOunceTime/4     },
+    { Vodka3,    0,   oneOunceTime/4     },
+    { Vodka4,    0,   oneOunceTime/4     },
+    { IcedTea,   0, 2*oneOunceValveTime  },
+    { Lemonade,  0, 2*oneOunceValveTime  },
   }
   ,
-  { // Luma Droid    (Red Button)
-    { Vodka,        0,   oneOunceTime  },
-    { PeachSchnaps, 0,   oneOunceTime  }, 
-    { BlueCuracao,  0,   oneOunceTime  },
-    { LimeCordial,  0, 2*oneOunceTime  }
+  {  // Raspberry Pi (Red Button)
+    { Vodka1,    0,   oneOunceTime/4     },
+    { Vodka2,    0,   oneOunceTime/4     },
+    { Vodka3,    0,   oneOunceTime/4     },
+    { Vodka4,    0,   oneOunceTime/4     },
+    { IcedTea,   0, 3*oneOunceValveTime  },
   }
   ,
-  { // Robot Cosmo   (Blue Button)
-    { Vodka,        0, 1.5*oneOunceTime      },
-    { BlueCuracao,  0, 0.5*oneOunceTime      },
-    { LimeCordial,  0, 0.5*oneOunceTime      },
-    { Cranberry,    0, 1.5*oneOunceValveTime }
+  {  // Hacked Lemonade (Blue Button)
+    { Vodka1,    0,   oneOunceTime/4     },
+    { Vodka2,    0,   oneOunceTime/4     },
+    { Vodka3,    0,   oneOunceTime/4     },
+    { Vodka4,    0,   oneOunceTime/4     },
+    { Lemonade,  0, 3*oneOunceValveTime  },
   }
   ,
-  { // Green Widow   (Green Button) (actually white button?!?)
-    { BlueCuracao,  0, 2*oneOunceTime       },
-    { LimeCordial,  0,   oneOunceTime       },
-    { OJ,           0, 3*oneOunceValveTime  }
+  {  // 3D Iced Tea  (White Button)
+    { Vodka1,    0,   oneOunceTime/4     },
+    { Vodka2,    0,   oneOunceTime/4     },
+    { Vodka3,    0,   oneOunceTime/4     },
+    { Vodka4,    0,   oneOunceTime/4     },
+    { IcedTea,   0, 1.5*oneOunceValveTime  },
+    { Lemonade,  0, 1.5*oneOunceValveTime  },
   }
 };
 
 int drinkActionLengths[] = {
-  4,
-  4,
-  4,
-  4,
-  4,
-  3
+  5,
+  5,
+  6,
+  5,
+  5,
+  6
 };
 
 
@@ -101,7 +103,7 @@ int servoStates [] = {
 // indecies: position 0: off, position 1: on (servo 0)
 // position 2: off, position 3: on (servo 1) 
 int servoStatePositions [] = {
-  20, 90, 140, 70}; // (0-180)
+  50, 110, 120, 70}; // (0-180)
 int nOfServos = 2;
 
 // create servo object to control a servo
@@ -177,17 +179,23 @@ void loopLightStrip() {
   // Fast Animations
   if (ledAnimationType == 0) iterateRainbowCycle(ledFrame);
   if (ledAnimationType == 1) iterateRainbow(ledFrame);
+  if (ledAnimationType == 2) iterateBlinkingChirp(c, ledFrame);
+  if (ledAnimationType == 3) iterateFadeSingleColor(c, ledFrame);
 
   // Slow Animation Prep
-  if (millis() - lastLEDTime < 50 || ledAnimationType < 10) return;
+  int timeDivisor = 10;
+  if (millis() - lastLEDTime < timeDivisor || ledAnimationType < 10) return;
   lastLEDTime = millis();
   ledFrame++;
 
   // Slow Animations
-  if (ledAnimationType == 10) iterateTheaterChase(c, ledFrame/50);
-  if (ledAnimationType == 11) iterateTheaterChaseRainbow(ledFrame/50);
-  if (ledAnimationType == 12) iterateColorWipe(c, ledFrame/50);
-  if (ledAnimationType == 13) iterateColorChase(c, ledFrame/50);
+  if (ledAnimationType == 10) iterateTheaterChase(c, ledFrame/timeDivisor);
+  //c = strip.Color(0, 0, 127);
+  //if (ledAnimationType == 11) iterateTheaterChase(c, ledFrame/timeDivisor);
+  //if (ledAnimationType == 11) iterateTheaterChaseRainbow(ledFrame/timeDivisor);
+  c = strip.Color(127, 127, 127);
+  if (ledAnimationType == 12) iterateColorWipe(c, ledFrame*1.2/timeDivisor);
+  if (ledAnimationType == 13) iterateColorChase(c, ledFrame/timeDivisor);
 
 }
 
@@ -247,6 +255,32 @@ void iterateColorChase(uint32_t c, int frame) {
   }
 
   strip.setPixelColor(i, 0); // Set new pixel 'on'
+  strip.show();              // Refresh LED states
+}
+
+void iterateFadeSingleColor(uint32_t c, int frame) {
+  // sinusiodal fade up and down of a single color
+  c = strip.Color(0, 0, 127*abs(sin(frame*31.4*2)));
+  for (int j = 0; j < strip.numPixels(); ++j) {
+    strip.setPixelColor(j, c);}
+  strip.show();              // Refresh LED states
+  
+}
+
+// blinking faster and faster
+void iterateBlinkingChirp(uint32_t c, int frame) {
+  int q = frame % 10;  // counter
+  int fraction = frame / 50; // faction of time to be on/off (/10)
+  if (fraction <= q)
+  {
+    for (int j = 0; j < strip.numPixels(); ++j) {
+      strip.setPixelColor(j, c);}
+  }
+  else
+  {
+    for (int j = 0; j < strip.numPixels(); ++j) {
+      strip.setPixelColor(j, strip.Color(0, 0, 0));}
+  }
   strip.show();              // Refresh LED states
 }
 
@@ -340,10 +374,6 @@ void setupMotorShield() {
 // Buttons
 /*****************************************************************************/
 
-//int buttonInputs[] = { 
-//  2, 4, 6, A2, 8, 12 };
-//int buttonLights[] = { 
-//  3, 5, 7, 11, A3, 13 };
 int buttonInputs[] = { 
   2, 4, 6, 8, A2, 12 };
 int buttonLights[] = { 
@@ -435,6 +465,10 @@ void startDrink(int i)
 {
   currentDrink = i;
   actionNumber = -1;
+  ledFrame = 0;
+  if (i == 0 | i == 3) ledAnimationType = 10;
+  if (i == 1 | i == 4) ledAnimationType = 3;
+  if (i == 2 | i == 5) ledAnimationType = 12;
   drinkStart = millis();
 }
 
@@ -510,6 +544,7 @@ void loopDrinkLogic() {
   if (drinkFinished)
   {
     currentDrink = -1;
+    ledAnimationType = 1;
   }
 }
 
